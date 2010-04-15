@@ -348,8 +348,3 @@ M: sqlite-db-connection compound ( string seq -- new-string )
         [ 2drop ]
     } case ;
 
-M: sqlite-db-connection parse-db-error
-    dup n>> {
-        { 1 [ string>> parse-sqlite-sql-error ] }
-        [ drop ]
-    } case ;

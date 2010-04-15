@@ -23,7 +23,6 @@ PRIVATE>
 
 GENERIC: db-open ( db -- db-connection )
 HOOK: db-close db-connection ( handle -- )
-HOOK: parse-db-error db-connection ( error -- error' )
 
 : dispose-statements ( assoc -- ) values dispose-each ;
 
@@ -78,11 +77,7 @@ GENERIC: bind-tuple ( tuple statement -- )
 GENERIC: execute-statement* ( statement type -- )
 
 M: object execute-statement* ( statement type -- )
-    '[
-        _ _ drop query-results dispose
-    ] [
-        parse-db-error rethrow
-    ] recover ;
+    drop query-results dispose ;
 
 : execute-one-statement ( statement -- )
     dup type>> execute-statement* ;
