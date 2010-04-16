@@ -1,21 +1,26 @@
 ! Copyright (C) 2008 Doug Coleman.
 ! See http://factorcode.org/license.txt for BSD license.
 USING: arrays continuations db io kernel math namespaces
-quotations sequences db.postgresql.ffi alien alien.c-types
-alien.data db.types tools.walker ascii splitting math.parser
-combinators libc calendar.format byte-arrays destructors
-prettyprint accessors strings serialize io.encodings.binary
+quotations sequences db.postgresql.ffi db.errors.postgresql
+alien alien.c-types alien.data db.types tools.walker ascii
+splitting math.parser combinators libc calendar.format byte-arrays
+destructors prettyprint accessors strings serialize io.encodings.binary
 io.encodings.utf8 alien.strings io.streams.byte-array summary
 present urls specialized-arrays db.private ;
 SPECIALIZED-ARRAY: uint
 SPECIALIZED-ARRAY: void*
 IN: db.postgresql.lib
 
-: postgresql-result-error-message ( res -- str/f )
-    dup zero? [
-        drop f
-    ] [
-        PQresultErrorMessage [ blank? ] trim
+: postgresql-result-error-message ( res -- error )
+    dup zero? [ drop f ]
+    [
+        {
+            [ PG_DIAG_STATEMENT_POSITION PQresultErrorField string>number ]
+            [ PQresultErrorMessage [ blank? ] trim ]
+            [ PG_DIAG_MESSAGE_PRIMARY PQresultErrorField ]
+            [ PG_DIAG_SQLSTATE PQresultErrorField ]
+        }
+        cleave parse-postgresql-sql-error
     ] if ;
 
 : postgres-result-error ( res -- )

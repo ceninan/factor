@@ -1,54 +1,19 @@
-! Copyright (C) 2009 Doug Coleman.
+! Copyright (C) 2010 Niklas Waern.
 ! See http://factorcode.org/license.txt for BSD license.
-USING: kernel db.errors peg.ebnf strings sequences math
-combinators.short-circuit accessors math.parser quoting
-locals ;
+USING: accessors combinators db.errors kernel regexp sequences ;
 IN: db.errors.postgresql
 
-EBNF: parse-postgresql-sql-error
+: table-name ( message -- table )
+    R/ \".+\"/ first-match
+    [ CHAR: " = ] trim ;
 
-Error = "ERROR:" [ ]+
+: parse-postgresql-sql-error ( location summary message error-code -- error' )
+    {
+        { "42P01"  [ nip table-name <sql-table-missing> ] }
+        { "42P07"  [ nip table-name <sql-table-exists>  ] }
+        { "42883"  [ drop <sql-function-missing> ] }
+        { "42723"  [ drop <sql-function-exists>  ] }
+        { "42601"  [ drop <sql-syntax-error>     ] }
+        [ 2drop <sql-unknown-error> ]
+    } case swap >>location ;
 
-TableError =
-    Error ("relation "|"table ")(!(" already exists").)+:table " already exists"
-        => [[ table >string unquote <sql-table-exists> ]]
-    | Error ("relation "|"table ")(!(" does not exist").)+:table " does not exist"
-        => [[ table >string unquote <sql-table-missing> ]]
-
-FunctionError =
-    Error "function" (!(" already exists").)+:table " already exists"
-        => [[ table >string <sql-function-exists> ]]
-    | Error "function" (!(" does not exist").)+:table " does not exist"
-        => [[ table >string <sql-function-missing> ]]
-
-SyntaxError =
-    Error "syntax error at end of input":error
-        => [[ error >string <sql-syntax-error> ]]
-    | Error "syntax error at or near " .+:syntaxerror
-        => [[ syntaxerror >string unquote <sql-syntax-error> ]]
-
-UnknownError = .* => [[ >string <sql-unknown-error> ]]
-
-PostgresqlSqlError = (TableError | FunctionError | SyntaxError | UnknownError) 
-
-;EBNF
-
-
-TUPLE: parse-postgresql-location column line text ;
-C: <parse-postgresql-location> parse-postgresql-location
-
-EBNF: parse-postgresql-line-error
-
-Line = "LINE " [0-9]+:line ": " .+:sql
-    => [[ f line >string string>number sql >string <parse-postgresql-location> ]] 
-
-;EBNF
-
-:: set-caret-position ( error caret-line -- error )
-    caret-line length
-    error line>> number>string length "LINE : " length +
-    - [ error ] dip >>column ;
-
-: postgresql-location ( line column -- obj )
-    [ parse-postgresql-line-error ] dip
-    set-caret-position ;
