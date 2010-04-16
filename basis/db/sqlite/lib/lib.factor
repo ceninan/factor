@@ -1,22 +1,21 @@
 ! Copyright (C) 2008 Chris Double, Doug Coleman.
 ! See http://factorcode.org/license.txt for BSD license.
 USING: alien.c-types alien.data arrays assocs kernel math math.parser
-namespaces sequences db.sqlite.ffi db combinators
-continuations db.types calendar.format serialize
+namespaces sequences db.sqlite.ffi db.errors.sqlite db
+combinators continuations db.types calendar.format serialize
 io.streams.byte-array byte-arrays io.encodings.binary
 io.backend db.errors present urls io.encodings.utf8
 io.encodings.string accessors shuffle io db.private ;
 IN: db.sqlite.lib
 
 ERROR: sqlite-error < db-error n string ;
-ERROR: sqlite-sql-error < sql-error n string ;
 
 : throw-sqlite-error ( n -- * )
     dup sqlite-error-messages nth sqlite-error ;
 
 : sqlite-statement-error ( -- * )
-    SQLITE_ERROR
-    db-connection get handle>> sqlite3_errmsg sqlite-sql-error ;
+    db-connection get handle>>
+    sqlite3_errmsg parse-sqlite-sql-error throw ;
 
 : sqlite-check-result ( n -- )
     {
