@@ -73,15 +73,20 @@ SYMBOL: opcode
 : button-names ( button_class -- seq/f )
     button-labels [ atom-names ] [ f ] if* ;
 
-: button-mask ( button_class -- byte-array )
-    state>> [ mask>> ] [ mask_len>> ] bi memory>byte-array ;
+: button-mask ( button_state -- byte-array )
+    [ mask>> ] [ mask_len>> ] bi memory>byte-array ;
 
 : valuator-name ( valuator_class -- string )
     label>> dpy get swap XGetAtomName ;
 
 
-TUPLE: motion-data axis raw accelerated ;
-C: <motion-data> motion-data
+TUPLE: motion-data axis value ;
+
+TUPLE: relative-motion-data < motion-data raw ;
+C: <relative-motion-data> relative-motion-data
+
+TUPLE: absolute-motion-data < motion-data ;
+C: <absolute-motion-data> absolute-motion-data
 
 <PRIVATE
 : get-set-bits ( bit-array -- seq )
@@ -90,9 +95,9 @@ PRIVATE>
 
 :: (raw-event>motion-data) ( raw* accelerated* mask -- seq )
     mask get-set-bits
-    raw* accelerated*
+    accelerated* raw*
     [ mask bit-count <direct-double-array> ] bi@
-    [ <motion-data> ] 3map ;
+    [ <relative-motion-data> ] 3map ;
 
 : raw-event>motion-data ( raw-event -- seq )
     [ raw_values>> ]
@@ -102,6 +107,18 @@ PRIVATE>
         [ mask_len>> ] tri
     memory>byte-array le> integer>bit-array
     (raw-event>motion-data) ;
+
+:: (valuator-state) ( values mask -- seq )
+    mask get-set-bits
+    values mask bit-count <direct-double-array>
+    [ <absolute-motion-data> ] 2map ;
+
+: valuator-state ( valuator_state -- seq )
+    [ values>>   ]
+    [ mask>>     ]
+    [ mask_len>> ] tri
+    memory>byte-array le> integer>bit-array
+    (valuator-state) ;
 
 
 : alien>device-class ( alien -- device-class )

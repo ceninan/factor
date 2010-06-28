@@ -34,6 +34,13 @@ HELP: (raw-event>motion-data)
 }
 { $description "" } ;
 
+HELP: (valuator-state)
+{ $values
+    { "values" alien } { "mask" bit-array }
+    { "seq" sequence }
+}
+{ $description "" } ;
+
 HELP: (xi-opcode)
 { $values
     { "display" Display }
@@ -48,6 +55,13 @@ HELP: (xi2-available?)
 }
 { $description "" } ;
 
+HELP: <absolute-motion-data>
+{ $values
+    { "axis" integer } { "value" float }
+    { "absolute-motion-data" absolute-motion-data }
+}
+{ $description "" } ;
+
 HELP: <direct-Atom-array>
 { $values
     { "alien" alien } { "len" integer }
@@ -55,10 +69,10 @@ HELP: <direct-Atom-array>
 }
 { $description "" } ;
 
-HELP: <motion-data>
+HELP: <relative-motion-data>
 { $values
-    { "axis" integer } { "raw" float } { "accelerated" float }
-    { "motion-data" motion-data }
+    { "axis" integer } { "value" float } { "raw" float }
+    { "relative-motion-data" relative-motion-data }
 }
 { $description "" } ;
 
@@ -69,6 +83,9 @@ HELP: <xi2-event-mask>
 }
 { $description "Construct a " { $link XIEventMask } "struct from a sequence of " { $link xi2-event-type } "." }
 { $notes "You should " { $link free } " the mask slot when you are done with the struct." } ;
+
+HELP: absolute-motion-data
+{ $var-description "" } ;
 
 HELP: alien>device-class
 { $values
@@ -93,10 +110,10 @@ HELP: button-labels
 
 HELP: button-mask
 { $values
-    { "button_class" XIButtonClassInfo }
+    { "button_state" XIButtonState }
     { "byte-array" byte-array }
 }
-{ $description "Returns a mask where each bit corresponds to the pressed status of a button in the button class." } ;
+{ $description "Returns a mask where each bit corresponds to the pressed status of a button in the button state." } ;
 
 HELP: button-names
 { $values
@@ -157,7 +174,10 @@ HELP: raw-event>motion-data
     { "raw-event" XIRawEvent }
     { "seq" sequence }
 }
-{ $description "Returns a list of " { $link motion-data } "." } ;
+{ $description "Returns a list of " { $link relative-motion-data } "." } ;
+
+HELP: relative-motion-data
+{ $var-description "" } ;
 
 HELP: valuator-name
 { $values
@@ -165,6 +185,13 @@ HELP: valuator-name
     { "string" string }
 }
 { $description "Returns the name of a valuator class (axis)." } ;
+
+HELP: valuator-state
+{ $values
+    { "valuator_state" XIValuatorState }
+    { "seq" sequence }
+}
+{ $description "Returns a list of " { $link absolute-motion-data } "." } ;
 
 HELP: xi-event?
 { $values
@@ -205,6 +232,7 @@ HELP: xi2-max-event-mask-size
 
 {
     { valuator-name button-names button-labels }
+    { valuator-state button-mask raw-event>motion-data }
     { devices device device-classes (device) (devices) }
     { xi-opcode (xi-opcode) opcode }
     { xi2-available? (xi2-available?) }
