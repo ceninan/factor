@@ -18,6 +18,8 @@ FUNCTION: udev* udev_ref (
 FUNCTION: void udev_unref (
   udev* udev ) ;
 
+DESTRUCTOR: udev_unref
+
 
 
 FUNCTION: udev* udev_new ( ) ;
@@ -113,6 +115,8 @@ FUNCTION: udev_device* udev_device_ref (
 
 FUNCTION: void udev_device_unref (
   udev_device* udev_device ) ;
+
+DESTRUCTOR: udev_device_unref
 
 
 
@@ -240,6 +244,8 @@ FUNCTION: udev_monitor* udev_monitor_ref (
 FUNCTION: void udev_monitor_unref (
   udev_monitor* udev_monitor ) ;
 
+DESTRUCTOR: udev_monitor_unref
+
 
 
 FUNCTION: udev* udev_monitor_get_udev (
@@ -306,6 +312,8 @@ FUNCTION: udev_enumerate* udev_enumerate_ref (
 
 FUNCTION: void udev_enumerate_unref (
   udev_enumerate* udev_enumerate ) ;
+
+DESTRUCTOR: udev_enumerate_unref
 
 
 
@@ -388,6 +396,8 @@ FUNCTION: udev_queue* udev_queue_ref (
 
 FUNCTION: void udev_queue_unref (
   udev_queue* udev_queue ) ;
+
+DESTRUCTOR: udev_queue_unref
 
 
 
