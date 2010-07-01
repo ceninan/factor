@@ -1,16 +1,10 @@
 ! Copyright (C) 2010 Niklas Waern.
 ! See http://factorcode.org/license.txt for BSD license.
-USING: accessors combinators destructors kernel locals
-libudev.ffi sequences ;
+USING: kernel locals libudev.ffi sequences ;
 IN: libudev
 
 : udev-list-entries ( first_entry -- seq )
     [ ] collector [ udev_list_entry_foreach ] dip ;
-
-
-: <udev> ( -- alien ) udev_new ; inline
-: <enumerate> ( udev -- alien ) udev_enumerate_new ; inline
-
 
 : (scan-devices) ( enumerate -- syspaths )
     [
