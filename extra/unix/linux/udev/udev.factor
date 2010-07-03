@@ -1,7 +1,7 @@
 ! Copyright (C) 2010 Niklas Waern.
 ! See http://factorcode.org/license.txt for BSD license.
-USING: kernel locals libudev.ffi sequences ;
-IN: libudev
+USING: kernel locals unix.linux.udev.ffi sequences ;
+IN: unix.linux.udev
 
 : udev-list-entries ( first_entry -- seq )
     [ ] collector [ udev_list_entry_foreach ] dip ;
