@@ -5,7 +5,8 @@ namespaces math classes bit-arrays system sequences vectors
 x11 x11.xlib assocs generalizations unix.linux.udev
 unix.linux.udev.ffi destructors math.parser combinators
 combinators.short-circuit threads io.backend.unix.multiplexers
-locals unix.ffi ;
+locals unix.ffi unix.linux.input io.binary byte-arrays sets
+inverse math.functions classes.struct ;
 IN: game.input.linux
 
 SINGLETON: linux-game-input-backend
@@ -18,7 +19,7 @@ linux-game-input-backend game-input-backend set-global
 
 <PRIVATE
 
-TUPLE: controller-handle device fd ;
+TUPLE: controller-handle device fd rumble-id ;
 
 : <input-monitor> ( -- monitor )
     +udev+ get-global "udev" udev_monitor_new_from_netlink
@@ -122,6 +123,91 @@ TUPLE: controller-handle device fd ;
     ] with-destructors ;
 
 
+: controller-buttons-present ( controller -- seq )
+    handle>> fd>> [ KEY_MAX <byte-array> ] dip
+    EV_KEY KEY_MAX EVIOCGBIT pick ioctl
+    head le> integer>bit-array t swap indices ;
+
+: controller-buttons-pressed ( controller -- seq )
+    handle>> fd>> [ KEY_MAX <byte-array> ] dip
+    KEY_MAX EVIOCGKEY pick ioctl
+    head le> integer>bit-array t swap indices ;
+
+: >pov ( x y -- symbol )
+    {
+        { [  0.0  0.0 ] [ pov-neutral    ] }
+        { [  0.0 -1.0 ] [ pov-up         ] }
+        { [  0.0  1.0 ] [ pov-down       ] }
+        { [ -1.0  0.0 ] [ pov-left       ] }
+        { [  1.0  0.0 ] [ pov-right      ] }
+        { [ -1.0 -1.0 ] [ pov-up-left    ] }
+        { [ -1.0  1.0 ] [ pov-down-left  ] }
+        { [  1.0 -1.0 ] [ pov-up-right   ] }
+        { [  1.0  1.0 ] [ pov-down-right ] }
+    } switch ;
+
+:: normalize-absinfo ( absinfo -- float )
+    absinfo
+    [ value>> ] [ maximum>> ] [ minimum>> ] tri :> ( value maximum minimum )
+    maximum 0 = not [
+        value minimum -
+        maximum minimum - 2/
+        2dup absinfo flat>> ~ [ nip dup ] when
+        / 1 - >float
+    ] [ 0.0 ] if ;
+
+:: read-axis ( fd axis -- absinfo )
+    input_absinfo <struct> :> result
+    fd axis EVIOCGABS result ioctl 0 >= [
+        input_absinfo <struct> :> result
+    ] unless result normalize-absinfo ;
+
+:: controller-axes ( controller controller-state -- controller-state' )
+    controller handle>> fd>> :> fd
+    controller-state
+        fd ABS_X read-axis >>x
+        fd ABS_Y read-axis >>y
+        fd ABS_Z read-axis >>z
+        fd ABS_RX read-axis >>rx
+        fd ABS_RY read-axis >>ry
+        fd ABS_RZ read-axis >>rz
+        fd ABS_THROTTLE read-axis >>slider
+        fd ABS_HAT0X read-axis fd ABS_HAT0Y read-axis >pov >>pov ;
+
+
+
+: <rumble> ( strong weak -- ff_effect )
+    [ ff_effect <struct> ] 2dip
+        ff_rumble_effect <struct-boa> >>u
+        FF_RUMBLE >>type ;
+
+: <force-event> ( id -- input_event )
+    [ input_event <struct> ] dip
+        >>value
+        EV_FF >>type
+        1 >>code ;
+
+: remove-rumble ( controller -- )
+    handle>>
+    [ fd>> ] [ rumble-id>> ] bi
+    [
+        [ EVIOCRMFF ] dip ioctl drop
+    ] [ drop ] if* ;
+
+:: upload-rumble ( controller ff_effect -- )
+    controller handle>> fd>> EVIOCSFF ff_effect ioctl
+    dup 0 >= [
+        controller rumble-id<<
+    ] [ drop ] if ;
+
+: play-rumble ( controller -- )
+    handle>> [ fd>> ] [ rumble-id>> ] bi
+    [
+        <force-event> input_event heap-size write drop
+    ] [ drop ] if* ;
+
+
+
 : setup-controllers ( -- )
     H{ } clone +controllers+ set-global
     <input-monitor> +monitor+ set-global
@@ -165,13 +251,20 @@ M: linux-game-input-backend instance-id
     "ID_PATH" udev_device_get_property_value ;
      
 M: linux-game-input-backend read-controller
-    drop controller-state new ;
+    controller-state new
+        over controller-buttons-pressed
+        pick controller-buttons-present
+        [ over in? [ 1.0 ] [ f ] if ] map nip >>buttons
+    controller-axes ;
      
 M: linux-game-input-backend calibrate-controller
     drop ;
      
 M: linux-game-input-backend vibrate-controller
-    3drop ;
+    [let :> ( controller motor1 motor2 )
+        controller remove-rumble
+        controller motor1 motor2 <rumble> upload-rumble
+        controller play-rumble ] ;
 
 HOOK: x>hid-bit-order os ( -- x )
 
