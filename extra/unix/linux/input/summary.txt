@@ -1,0 +1,1 @@
+Constants, structs and macros from linux/input.h useful for reading /dev/input/eventN devices.
