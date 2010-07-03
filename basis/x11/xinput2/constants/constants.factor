@@ -1,6 +1,6 @@
 ! Copyright (C) 2010 Niklas Waern.
 ! See http://factorcode.org/license.txt for BSD license.
-USING: math ;
+USING: alien.enums alien.syntax math ;
 IN: x11.xinput2.constants
 
 ! From XI2.h
@@ -10,132 +10,191 @@ CONSTANT: XInput_2_0               7
 CONSTANT: XI_2_Major               2
 CONSTANT: XI_2_Minor               0
 
-! Property event flags
-CONSTANT: XIPropertyDeleted        0
-CONSTANT: XIPropertyCreated        1
-CONSTANT: XIPropertyModified       2
+ENUM: xi2-property-event
+    XIPropertyDeleted
+    XIPropertyCreated
+    XIPropertyModified ;
 
 ! Enter/Leave and Focus In/Out modes
-CONSTANT: XINotifyNormal           0
-CONSTANT: XINotifyGrab             1
-CONSTANT: XINotifyUngrab           2
-CONSTANT: XINotifyWhileGrabbed     3
-CONSTANT: XINotifyPassiveGrab      4
-CONSTANT: XINotifyPassiveUngrab    5
+ENUM: xi2-notify-mode
+    XINotifyNormal
+    XINotifyGrab
+    XINotifyUngrab
+    XINotifyWhileGrabbed
+    XINotifyPassiveGrab
+    XINotifyPassiveUngrab ;
 
 ! Enter/Leave and Focus In/Out detail
-CONSTANT: XINotifyAncestor         0
-CONSTANT: XINotifyVirtual          1
-CONSTANT: XINotifyInferior         2
-CONSTANT: XINotifyNonlinear        3
-CONSTANT: XINotifyNonlinearVirtual 4
-CONSTANT: XINotifyPointer          5
-CONSTANT: XINotifyPointerRoot      6
-CONSTANT: XINotifyDetailNone       7
+ENUM: xi2-notify-detail
+    XINotifyAncestor
+    XINotifyVirtual
+    XINotifyInferior
+    XINotifyNonlinear
+    XINotifyNonlinearVirtual
+    XINotifyPointer
+    XINotifyPointerRoot
+    XINotifyDetailNone ;
 
-! Passive grab types
-CONSTANT: XIGrabtypeButton         0
-CONSTANT: XIGrabtypeKeycode        1
-CONSTANT: XIGrabtypeEnter          2
-CONSTANT: XIGrabtypeFocusIn        3
+ENUM: xi2-passive-grab-type
+    XIGrabtypeButton
+    XIGrabtypeKeycode
+    XIGrabtypeEnter
+    XIGrabtypeFocusIn ;
 
-! Passive grab modifier
-: XIAnyModifier ( -- n )           31 2^ ; inline
-: XIAnyButton   ( -- n )           0     ; inline
-: XIAnyKeycode  ( -- n )           0     ; inline
+! Passive grab modifiers
+: XIAnyModifier ( -- n ) 31 2^ ; inline
+CONSTANT: XIAnyButton    0
+CONSTANT: XIAnyKeycode   0
 
-! XIAllowEvents event-modes
-CONSTANT: XIAsyncDevice            0
-CONSTANT: XISyncDevice             1
-CONSTANT: XIReplayDevice           2
-CONSTANT: XIAsyncPairedDevice      3
-CONSTANT: XIAsyncPair              4
-CONSTANT: XISyncPair               5
+! XIAllowEvents event modes
+ENUM: xi2-allow-events-mode
+    XIAsyncDevice
+    XISyncDevice
+    XIReplayDevice
+    XIAsyncPairedDevice
+    XIAsyncPair
+    XISyncPair ;
 
 ! DeviceChangedEvent change reasons
-CONSTANT: XISlaveSwitch            1
-CONSTANT: XIDeviceChange           2
+ENUM: xi2-device-change-reason
+  { XISlaveSwitch 1 }
+    XIDeviceChange ;
 
 ! Hierarchy flags
-: XIMasterAdded    ( -- n )        0 2^ ; inline
-: XIMasterRemoved  ( -- n )        1 2^ ; inline
-: XISlaveAdded     ( -- n )        2 2^ ; inline
-: XISlaveRemoved   ( -- n )        3 2^ ; inline
-: XISlaveAttached  ( -- n )        4 2^ ; inline
-: XISlaveDetached  ( -- n )        5 2^ ; inline
-: XIDeviceEnabled  ( -- n )        6 2^ ; inline
-: XIDeviceDisabled ( -- n )        7 2^ ; inline
+: XIMasterAdded    ( -- n ) 0 2^ ; inline
+: XIMasterRemoved  ( -- n ) 1 2^ ; inline
+: XISlaveAdded     ( -- n ) 2 2^ ; inline
+: XISlaveRemoved   ( -- n ) 3 2^ ; inline
+: XISlaveAttached  ( -- n ) 4 2^ ; inline
+: XISlaveDetached  ( -- n ) 5 2^ ; inline
+: XIDeviceEnabled  ( -- n ) 6 2^ ; inline
+: XIDeviceDisabled ( -- n ) 7 2^ ; inline
 
-! ChangeHierarchy constants
-CONSTANT: XIAddMaster              1
-CONSTANT: XIRemoveMaster           2
-CONSTANT: XIAttachSlave            3
-CONSTANT: XIDetachSlave            4
+ENUM: xi2-hierarchy-change-type
+  { XIAddMaster 1 }
+    XIRemoveMaster
+    XIAttachSlave
+    XIDetachSlave ;
 
-CONSTANT: XIAttachToMaster         1
-CONSTANT: XIFloating               2
+! XIRemoveMasterInfo return modes
+ENUM: xi2-remove-master-return-mode
+  { XIAttachToMaster 1 }
+    XIFloating ;
 
-! Valuator modes
-CONSTANT: XIModeRelative           0
-CONSTANT: XIModeAbsolute           1
+ENUM: xi2-valuator-mode
+    XIModeRelative
+    XIModeAbsolute ;
 
-! Device types
-CONSTANT: XIMasterPointer          1
-CONSTANT: XIMasterKeyboard         2
-CONSTANT: XISlavePointer           3
-CONSTANT: XISlaveKeyboard          4
-CONSTANT: XIFloatingSlave          5
+ENUM: xi2-device-type
+  { XIMasterPointer 1 }
+    XIMasterKeyboard
+    XISlavePointer
+    XISlaveKeyboard
+    XIFloatingSlave ;
 
-! Device classes
-CONSTANT: XIKeyClass               0
-CONSTANT: XIButtonClass            1
-CONSTANT: XIValuatorClass          2
+ENUM: xi2-device-class
+    XIKeyClass
+    XIButtonClass
+    XIValuatorClass ;
 
 ! Device event flags (common)
 ! Device event flags (key events only)
-: XIKeyRepeat ( -- n )             16 2^ ; inline
+: XIKeyRepeat ( -- n ) 16 2^ ; inline
 ! Device event flags (pointer events only)
 
-! Fake device ID's for event selection
-CONSTANT: XIAllDevices             0
-CONSTANT: XIAllMasterDevices       1
+! Fake device ids
+ENUM: xi2-device-id
+    XIAllDevices
+    XIAllMasterDevices ;
 
-! Event types
-CONSTANT: XI_DeviceChanged         1
-CONSTANT: XI_KeyPress              2
-CONSTANT: XI_KeyRelease            3
-CONSTANT: XI_ButtonPress           4
-CONSTANT: XI_ButtonRelease         5
-CONSTANT: XI_Motion                6
-CONSTANT: XI_Enter                 7
-CONSTANT: XI_Leave                 8
-CONSTANT: XI_FocusIn               9
-CONSTANT: XI_FocusOut              10
-CONSTANT: XI_HierarchyChanged      11
-CONSTANT: XI_PropertyEvent         12
-CONSTANT: XI_RawKeyPress           13
-CONSTANT: XI_RawKeyRelease         14
-CONSTANT: XI_RawButtonPress        15
-CONSTANT: XI_RawButtonRelease      16
-CONSTANT: XI_RawMotion             17
-: XI_LASTEVENT ( -- n )            XI_RawMotion ; inline
+ENUM: xi2-event-type
+  { XI_DeviceChanged 1 }
+    XI_KeyPress
+    XI_KeyRelease
+    XI_ButtonPress
+    XI_ButtonRelease
+    XI_Motion
+    XI_Enter
+    XI_Leave
+    XI_FocusIn
+    XI_FocusOut
+    XI_HierarchyChanged
+    XI_PropertyEvent
+    XI_RawKeyPress
+    XI_RawKeyRelease
+    XI_RawButtonPress
+    XI_RawButtonRelease
+    XI_RawMotion ;
+
+: XI_LASTEVENT ( -- n ) XI_RawMotion ; inline
 
 ! Event masks
-: XI_DeviceChangedMask    ( -- n ) XI_DeviceChanged    2^ ; inline
-: XI_KeyPressMask         ( -- n ) XI_KeyPress         2^ ; inline
-: XI_KeyReleaseMask       ( -- n ) XI_KeyRelease       2^ ; inline
-: XI_ButtonPressMask      ( -- n ) XI_ButtonPress      2^ ; inline
-: XI_ButtonReleaseMask    ( -- n ) XI_ButtonRelease    2^ ; inline
-: XI_MotionMask           ( -- n ) XI_Motion           2^ ; inline
-: XI_EnterMask            ( -- n ) XI_Enter            2^ ; inline
-: XI_LeaveMask            ( -- n ) XI_Leave            2^ ; inline
-: XI_FocusInMask          ( -- n ) XI_FocusIn          2^ ; inline
-: XI_FocusOutMask         ( -- n ) XI_FocusOut         2^ ; inline
-: XI_HierarchyChangedMask ( -- n ) XI_HierarchyChanged 2^ ; inline
-: XI_PropertyEventMask    ( -- n ) XI_PropertyEvent    2^ ; inline
-: XI_RawKeyPressMask      ( -- n ) XI_RawKeyPress      2^ ; inline
-: XI_RawKeyReleaseMask    ( -- n ) XI_RawKeyRelease    2^ ; inline
-: XI_RawButtonPressMask   ( -- n ) XI_RawButtonPress   2^ ; inline
-: XI_RawButtonReleaseMask ( -- n ) XI_RawButtonRelease 2^ ; inline
-: XI_RawMotionMask        ( -- n ) XI_RawMotion        2^ ; inline
+: XI_DeviceChangedMask    ( -- n ) XI_DeviceChanged    enum>number 2^ ; inline
+: XI_KeyPressMask         ( -- n ) XI_KeyPress         enum>number 2^ ; inline
+: XI_KeyReleaseMask       ( -- n ) XI_KeyRelease       enum>number 2^ ; inline
+: XI_ButtonPressMask      ( -- n ) XI_ButtonPress      enum>number 2^ ; inline
+: XI_ButtonReleaseMask    ( -- n ) XI_ButtonRelease    enum>number 2^ ; inline
+: XI_MotionMask           ( -- n ) XI_Motion           enum>number 2^ ; inline
+: XI_EnterMask            ( -- n ) XI_Enter            enum>number 2^ ; inline
+: XI_LeaveMask            ( -- n ) XI_Leave            enum>number 2^ ; inline
+: XI_FocusInMask          ( -- n ) XI_FocusIn          enum>number 2^ ; inline
+: XI_FocusOutMask         ( -- n ) XI_FocusOut         enum>number 2^ ; inline
+: XI_HierarchyChangedMask ( -- n ) XI_HierarchyChanged enum>number 2^ ; inline
+: XI_PropertyEventMask    ( -- n ) XI_PropertyEvent    enum>number 2^ ; inline
+: XI_RawKeyPressMask      ( -- n ) XI_RawKeyPress      enum>number 2^ ; inline
+: XI_RawKeyReleaseMask    ( -- n ) XI_RawKeyRelease    enum>number 2^ ; inline
+: XI_RawButtonPressMask   ( -- n ) XI_RawButtonPress   enum>number 2^ ; inline
+: XI_RawButtonReleaseMask ( -- n ) XI_RawButtonRelease enum>number 2^ ; inline
+: XI_RawMotionMask        ( -- n ) XI_RawMotion        enum>number 2^ ; inline
+
+
+
+! From x11.constants and x11.xlib; repeating here to be able
+! to use them as enums in xinput2 code without having to switch
+! all of x11 over.
+ENUM: x-grabmode
+    XGrabModeSync
+    XGrabModeAsync ;
+
+ENUM: x-propmode
+    XPropModeReplace
+    XPropModePrepend
+    XPropModeAppend ;
+
+ENUM: x-event-type
+  { X_KeyPress 2 }
+    X_KeyRelease
+    X_ButtonPress
+    X_ButtonRelease
+    X_MotionNotify
+    X_EnterNotify
+    X_LeaveNotify
+    X_FocusIn
+    X_FocusOut
+    X_KeymapNotify
+    X_Expose
+    X_GraphicsExpose
+    X_NoExpose
+    X_VisibilityNotify
+    X_CreateNotify
+    X_DestroyNotify
+    X_UnmapNotify
+    X_MapNotify
+    X_MapRequest
+    X_ReparentNotify
+    X_ConfigureNotify
+    X_ConfigureRequest
+    X_GravityNotify
+    X_ResizeNotify
+    X_CirculateNotify
+    X_CirculateRequest
+    X_PropertyNotify
+    X_SelectionClear
+    X_SelectionRequest
+    X_SelectionNotify
+    X_ColormapNotify
+    X_ClientMessage
+    X_MappingNotify
+    X_GenericEvent
+    X_LASTEvent ;
 
